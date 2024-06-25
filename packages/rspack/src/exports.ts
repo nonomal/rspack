@@ -184,11 +184,13 @@ interface Optimize {
 	LimitChunkCountPlugin: typeof LimitChunkCountPlugin;
 	RuntimeChunkPlugin: typeof RuntimeChunkPlugin;
 	SplitChunksPlugin: typeof SplitChunksPlugin;
+	CircularDependencyPlugin: typeof CircularDependencyPlugin;
 }
 export const optimize: Optimize = {
 	LimitChunkCountPlugin,
 	RuntimeChunkPlugin,
-	SplitChunksPlugin
+	SplitChunksPlugin,
+	CircularDependencyPlugin
 };
 
 import { ModuleFederationPlugin } from "./container/ModuleFederationPlugin";
@@ -223,6 +225,7 @@ export const container = {
 import { ConsumeSharedPlugin } from "./sharing/ConsumeSharedPlugin";
 import { ProvideSharedPlugin } from "./sharing/ProvideSharedPlugin";
 import { SharePlugin } from "./sharing/SharePlugin";
+import { CircularDependencyPlugin } from "./builtin-plugin/CircularDependencyPlugin";
 export type {
 	Consumes,
 	ConsumesConfig,
