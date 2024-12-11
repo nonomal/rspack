@@ -1,25 +1,24 @@
 use std::collections::HashMap;
 
-use rspack_core::{Compilation, Plugin, Module};
-use rspack_error::Result;
+use rspack_core::{Compilation, CompilationOptimizeModules, CompilerOptions, Module, Plugin};
+use rspack_error::{Error, Result};
 use rspack_hook::{plugin, plugin_hook};
 use rspack_regex::RspackRegex;
 use rspack_util::path::relative;
 
-#[derive(Debug, Clone, Default)]
+// #[derive(Debug)]
 pub struct CircularDependencyPluginOptions {
   // Constant overhead for a chunk.
   pub exclude: Option<RspackRegex>,
   pub include: Option<RspackRegex>,
-  pub fail_on_error: Option<bool>,
-  pub allow_async_cycles: Option<bool>,
-  pub on_detected: Option<bool>,
-  pub cwd: Option<String>,
-  // pub on_start: Option<Fn(String) -> String>,
+  pub fail_on_error: bool,
+  pub allow_async_cycles: bool,
+  pub on_detected: Option<Box<dyn Fn(&dyn Module, Vec<String>, &Compilation) -> Result<()>>>,
+  pub cwd: String,
 }
 
 #[plugin]
-#[derive(Debug)]
+// #[derive(Debug)]
 pub struct CircularDependencyPlugin {
   options: CircularDependencyPluginOptions,
 }
@@ -29,15 +28,13 @@ impl CircularDependencyPlugin {
     let merged_options = CircularDependencyPluginOptions {
       exclude: RspackRegex::new("$^").ok(),
       include: RspackRegex::new(".*").ok(),
-      fail_on_error: Some(false),
-      allow_async_cycles: Some(false),
-      on_detected: Some(false),
-      cwd: Some(
-        std::env::current_dir()
-          .unwrap()
-          .to_string_lossy()
-          .to_string(),
-      ),
+      fail_on_error: false,
+      allow_async_cycles: false,
+      on_detected: None,
+      cwd: std::env::current_dir()
+        .unwrap()
+        .to_string_lossy()
+        .to_string(),
       ..options
     };
 
@@ -51,7 +48,7 @@ impl CircularDependencyPlugin {
     seen_modules: &mut HashMap<u32, bool>,
     compilation: &Compilation,
   ) -> Option<Vec<String>> {
-    let cwd = &self.options.cwd.clone();
+    let cwd = self.options.cwd.to_string();
 
     let dependencies = initial_module.dependencies;
 
@@ -104,7 +101,12 @@ impl CircularDependencyPlugin {
         if let Some(mut maybe_cyclical_paths_list) =
           self.is_cyclic(initial_module, dep_module, seen_modules, compilation)
         {
-          maybe_cyclical_paths_list.insert(0, relative(&cwd, &current_module.resource.unwrap()).to_string_lossy().into());
+          maybe_cyclical_paths_list.insert(
+            0,
+            relative(&cwd, &current_module.resource.unwrap())
+              .to_string_lossy()
+              .into(),
+          );
           return Some(maybe_cyclical_paths_list);
         }
       }
@@ -114,40 +116,41 @@ impl CircularDependencyPlugin {
   }
 }
 
-#[plugin_hook(CompilationOptimizeChunks for CircularDependencyPlugin)]
+#[plugin_hook(CompilationOptimizeModules for CircularDependencyPlugin)]
 fn optimize_modules(&self, compilation: &mut Compilation) -> Result<Option<bool>> {
   let plugin = &self;
 
-  if plugin.options.on_start {
-    plugin.options.on_start(compilation);
-  }
-  for module in modules {
-    let should_skip = (
-      module.resource.is_none() ||
-      plugin.options.exclude.test(module.resource) ||
-      !plugin.options.include.test(module.resource)
-    );
+  // if plugin.options.on_start {
+  //   plugin.options.on_start(compilation);
+  // }
+  for module in compilation.modules.values() {
+    let should_skip = (module.resource.is_none()
+      || plugin.options.exclude.test(module.resource)
+      || !plugin.options.include.test(module.resource));
     // skip the module if it matches the exclude pattern
     if should_skip {
       continue;
     }
 
-    let maybe_cyclical_paths_list = &self.is_cyclic(module, module, HashMap::new(), compilation);
+    let maybe_cyclical_paths_list = &self.is_cyclic(module, module, {}, compilation);
     if let Some(cyclical_paths_list) = maybe_cyclical_paths_list {
       // allow consumers to override all behavior with onDetected
-      if let Some(on_detected) = plugin.options.onDetected {
-        match on_detected {
+      if let Some(on_detected) = &plugin.options.onDetected {
+        match on_detected(Module {
           module,
-          paths,
+          paths: maybe_cyclical_paths_list,
           compilation,
-        } => {
-          compilation.errors.push(err);
+        }) {
+          Ok(_) => {}
+          Err(err) => {
+            compilation.errors.push(err);
+          }
         }
         continue;
       }
 
       // mark warnings or errors on webpack compilation
-      let error = Error(BASE_ERROR.concat(maybe_cyclical_paths_list.join(" -> ")));
+      let error = Err(Error::new(maybe_cyclical_paths_list.join(" -> ")));
       if plugin.options.failOnError {
         compilation.errors.push(error);
       } else {
@@ -155,14 +158,14 @@ fn optimize_modules(&self, compilation: &mut Compilation) -> Result<Option<bool>
       }
     }
   }
-  if plugin.options.onEnd {
-    plugin.options.onEnd(compilation);
-  }
+  // if plugin.options.onEnd {
+  //   plugin.options.onEnd(compilation);
+  // }
 
   Ok(None)
 }
 
-impl PluginAAAA for CircularDependencyPlugin {
+impl Plugin for CircularDependencyPlugin {
   fn name(&self) -> &'static str {
     "CircularDependencyPlugin"
   }
@@ -170,7 +173,7 @@ impl PluginAAAA for CircularDependencyPlugin {
   fn apply(
     &self,
     ctx: rspack_core::PluginContext<&mut rspack_core::ApplyContext>,
-    _options: &mut rspack_core::CompilerOptions,
+    _options: &CompilerOptions,
   ) -> Result<()> {
     ctx
       .context
@@ -179,4 +182,6 @@ impl PluginAAAA for CircularDependencyPlugin {
       .tap(optimize_modules::new(self));
     Ok(())
   }
+
+  fn clear_cache(&self) {}
 }
