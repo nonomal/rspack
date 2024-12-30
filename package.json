@@ -80,7 +80,10 @@
     "webpack-cli": "5.1.4",
     "zx": "8.4.1"
   },
+<<<<<<< HEAD
   "packageManager": "pnpm@9.15.9",
+=======
+>>>>>>> 25898e8b4 (implement circulardependencyrspackplugin)
   "pnpm": {
     "patchedDependencies": {
       "graceful-fs": "patches/graceful-fs.patch",
