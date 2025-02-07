@@ -51,6 +51,7 @@ indoc              = { version = "2.0.5" }
 insta              = { version = "1.42.0" }
 itertools          = { version = "0.14.0" }
 json               = { version = "0.12.4" }
+libmimalloc-sys    = { version = "0.1.40", package = "libmimalloc-sys-rspack", features = ["extended"] }
 lightningcss       = { version = "1.0.0-alpha.63" }
 linked_hash_set    = { version = "0.1.5" }
 mimalloc           = { version = "0.1.44", package = "mimalloc-rspack" }
