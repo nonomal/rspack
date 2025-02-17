@@ -95,6 +95,15 @@ importers:
         specifier: 8.5.0
         version: 8.5.0
 
+  .bench/rspack-benchcases/10000:
+    dependencies:
+      react:
+        specifier: ^19.0.0
+        version: 19.0.0
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.0.0(react@19.0.0)
+
   crates/node_binding:
     optionalDependencies:
       '@rspack/binding-darwin-arm64':
@@ -663,6 +672,9 @@ importers:
       '@actions/core':
         specifier: 1.11.1
         version: 1.11.1
+      '@types/fs-extra':
+        specifier: 11.0.4
+        version: 11.0.4
       chalk:
         specifier: ^5.4.1
         version: 5.4.1
@@ -678,9 +690,6 @@ importers:
       semver:
         specifier: ^7.7.1
         version: 7.7.1
-      typescript:
-        specifier: ^5.7.3
-        version: 5.7.3
       zx:
         specifier: 8.5.0
         version: 8.5.0
