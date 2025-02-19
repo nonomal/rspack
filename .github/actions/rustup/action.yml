@@ -33,6 +33,10 @@ inputs:
     default: "check"
     required: false
     type: string
+  lookup-only:
+    default: false,
+    require: false,
+    type: boolean
 
 runs:
   using: composite
@@ -92,3 +96,5 @@ runs:
         shared-key: ${{ inputs.shared-key }}
         cache-all-crates: true
         save-if: ${{ inputs.save-cache }}
+        lookup-only: ${{ inputs.lookup-only }}
+

@@ -29,8 +29,12 @@ on:
         required: false
         type: string
       save-cache:
-        required: false,
-        type: boolean,
+        required: false
+        type: boolean
+        default: false
+      lookup-only:
+        required: false
+        type: boolean
         default: false
 env:
   # Since CI builds are more akin to from-scratch builds, incremental compilation adds unnecessary dependency-tracking and IO overhead, reducing caching effectiveness.
@@ -76,6 +80,7 @@ jobs:
         with:
           shared-key: build-${{ inputs.target }}-${{ inputs.profile }}
           save-cache: ${{ inputs.save-cache }}
+          lookup-only: ${{ inputs.lookup-only }}
 
       - name: Trim paths
         if: ${{ !inputs.skipable }}
