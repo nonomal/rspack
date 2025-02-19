@@ -71,7 +71,7 @@ jobs:
       save-cache: true
 
   test-linux-base:
-    name: Test Linux
+    name: Test Linux ALWAYS NO cache
     needs: [get-runner-labels, check-changed]
     uses: ./.github/workflows/reusable-build.yml
     with:
@@ -79,7 +79,7 @@ jobs:
       runner: ${{ needs.get-runner-labels.outputs.LINUX_RUNNER_LABELS }}
       skipable: ${{ needs.check-changed.outputs.changed != 'true' }}
       bench: true
-      save-cache: true
+      save-cache: false
       lookup-only: true
 
   test-windows:
