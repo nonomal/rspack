@@ -68,6 +68,7 @@ jobs:
       runner: ${{ needs.get-runner-labels.outputs.LINUX_RUNNER_LABELS }}
       skipable: ${{ needs.check-changed.outputs.changed != 'true' }}
       bench: true
+      save-cache: true
 
   test-windows:
     name: Test Windows
