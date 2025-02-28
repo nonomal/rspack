@@ -171,6 +171,10 @@ jobs:
         if: ${{ inputs.target == 'i686-pc-windows-msvc' && steps.check_cache.outputs.files_exists != 'true' && !inputs.skipable }}
         run: RUST_TARGET=${{ inputs.target }} DISABLE_PLUGIN=1 pnpm build:binding:${{ inputs.profile }}
 
+      - name: Dir target
+        if: ${{ inputs.target == 'i686-pc-windows-msvc' && steps.check_cache.outputs.files_exists != 'true' && !inputs.skipable }}
+        run: dir target\*.pdb /s /b
+
       - name: Build x86_64-pc-windows-msvc
         if: ${{ inputs.target == 'x86_64-pc-windows-msvc' && steps.check_cache.outputs.files_exists != 'true' && !inputs.skipable }}
         run: RUST_TARGET=${{ inputs.target }} pnpm build:binding:${{ inputs.profile }}
