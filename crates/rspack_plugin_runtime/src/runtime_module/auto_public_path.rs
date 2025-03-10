@@ -40,6 +40,7 @@ impl RuntimeModule for AutoPublicPathRuntimeModule {
   }
 
   fn generate(&self, compilation: &Compilation) -> rspack_error::Result<BoxSource> {
+    println!("AutoPublicPathRuntimeModule generate");
     let chunk = self.chunk.expect("The chunk should be attached");
     let chunk = compilation.chunk_by_ukey.expect_get(&chunk);
     let filename = get_js_chunk_filename_template(

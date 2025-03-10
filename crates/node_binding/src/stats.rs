@@ -1,5 +1,6 @@
 use std::cell::RefCell;
 
+use napi::{bindgen_prelude::Reference, Env};
 use napi_derive::napi;
 use rspack_collections::Identifier;
 use rspack_core::{
@@ -16,7 +17,7 @@ use rspack_napi::{
 use rspack_util::itoa;
 use rustc_hash::FxHashMap as HashMap;
 
-use crate::{identifier::JsIdentifier, JsCompilation};
+use crate::{identifier::JsIdentifier, wait_function_call, JsCompilation, JsFilenameFn};
 
 thread_local! {
   static MODULE_DESCRIPTOR_REFS: RefCell<HashMap<Identifier, OneShotRef>> = Default::default();
@@ -1032,6 +1033,8 @@ pub struct JsStats {
   inner: SharedReference<JsCompilation, Stats<'static>>,
 }
 
+unsafe impl Sync for JsStats {}
+
 impl JsStats {
   pub fn new(inner: SharedReference<JsCompilation, Stats<'static>>) -> Self {
     Self { inner }
@@ -1041,58 +1044,60 @@ impl JsStats {
 #[napi]
 impl JsStats {
   #[napi(ts_return_type = "JsStatsCompilation")]
-  pub fn to_json(&self, js_options: JsStatsOptions) -> Result<JsStatsCompilationWrapper> {
-    let options = ExtendedStatsOptions::from(js_options);
+  pub fn to_json(&self, env: Env, js_options: JsStatsOptions) -> Result<JsStatsCompilationWrapper> {
+    wait_function_call(env, move || {
+      let options: ExtendedStatsOptions = ExtendedStatsOptions::from(js_options);
 
-    let hash = options.hash.then(|| self.hash()).flatten();
+      let hash = options.hash.then(|| self.hash()).flatten();
 
-    let (assets, assets_by_chunk_name) = if options.assets {
-      let asts = self.assets();
-      (Some(asts.assets), Some(asts.assets_by_chunk_name))
-    } else {
-      (None, None)
-    };
+      let (assets, assets_by_chunk_name) = if options.assets {
+        let asts = self.assets();
+        (Some(asts.assets), Some(asts.assets_by_chunk_name))
+      } else {
+        (None, None)
+      };
 
-    let modules = if options.modules {
-      let mds = self.modules(&options)?;
-      Some(mds)
-    } else {
-      None
-    };
+      let modules = if options.modules {
+        let mds = self.modules(&options)?;
+        Some(mds)
+      } else {
+        None
+      };
 
-    let chunks = if options.chunks {
-      let chks = self.chunks(&options)?;
-      Some(chks)
-    } else {
-      None
-    };
+      let chunks = if options.chunks {
+        let chks = self.chunks(&options)?;
+        Some(chks)
+      } else {
+        None
+      };
 
-    let entrypoints = match options.entrypoints {
-      EntrypointsStatsOption::Bool(true) | EntrypointsStatsOption::String(_) => {
-        Some(self.entrypoints(options.chunk_group_auxiliary, options.chunk_group_children))
-      }
-      _ => None,
-    };
+      let entrypoints = match options.entrypoints {
+        EntrypointsStatsOption::Bool(true) | EntrypointsStatsOption::String(_) => {
+          Some(self.entrypoints(options.chunk_group_auxiliary, options.chunk_group_children))
+        }
+        _ => None,
+      };
 
-    let named_chunk_groups = options.chunk_groups.then(|| {
-      self.named_chunk_groups(options.chunk_group_auxiliary, options.chunk_group_children)
-    });
+      let named_chunk_groups = options.chunk_groups.then(|| {
+        self.named_chunk_groups(options.chunk_group_auxiliary, options.chunk_group_children)
+      });
 
-    let errors = self.errors();
+      let errors = self.errors();
 
-    let warnings = self.warnings();
+      let warnings = self.warnings();
 
-    Ok(JsStatsCompilationWrapper(JsStatsCompilation {
-      assets,
-      assets_by_chunk_name,
-      chunks,
-      entrypoints,
-      errors,
-      hash,
-      modules,
-      named_chunk_groups,
-      warnings,
-    }))
+      Ok(JsStatsCompilationWrapper(JsStatsCompilation {
+        assets,
+        assets_by_chunk_name,
+        chunks,
+        entrypoints,
+        errors,
+        hash,
+        modules,
+        named_chunk_groups,
+        warnings,
+      }))
+    })
   }
 
   fn assets(&self) -> JsStatsGetAssets {
