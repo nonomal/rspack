@@ -3138,6 +3138,7 @@ type KnownStatsCompilation = {
 // @public (undocumented)
 type KnownStatsError = {
     message: string;
+    code?: string;
     chunkName?: string;
     chunkEntry?: boolean;
     chunkInitial?: boolean;
