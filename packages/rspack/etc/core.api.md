@@ -3138,7 +3138,7 @@ type KnownStatsCompilation = {
 // @public (undocumented)
 type KnownStatsError = {
     message: string;
-    code?: string;
+    code?: StatsErrorCode | string;
     chunkName?: string;
     chunkEntry?: boolean;
     chunkInitial?: boolean;
@@ -6112,6 +6112,15 @@ export type StatsCompilation = KnownStatsCompilation & Record<string, any>;
 
 // @public (undocumented)
 export type StatsError = KnownStatsError & Record<string, any>;
+
+// @public (undocumented)
+enum StatsErrorCode {
+    ChunkMinificationError = "ChunkMinificationError",
+    ChunkMinificationWarning = "ChunkMinificationWarning",
+    ModuleBuildError = "ModuleBuildError",
+    ModuleParseError = "ModuleParseError",
+    ModuleParseWarning = "ModuleParseWarning"
+}
 
 // @public (undocumented)
 class StatsFactory {

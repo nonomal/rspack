@@ -1,14 +1,18 @@
 [
     {
-        "code": "ChunkMinificationWarning"
+        "code": "ChunkMinificationWarning",
+        "file": "main.css"
     },
     {
-        "code": "ChunkMinificationWarning"
+        "code": "ChunkMinificationWarning",
+        "file": "main.css"
     },
     {
-        "code": "ChunkMinificationWarning"
+        "code": "ChunkMinificationWarning",
+        "file": "main.css"
     },
     {
-        "code": "ChunkMinificationWarning"
+        "code": "ChunkMinificationWarning",
+        "file": "main.css"
     }
 ]
