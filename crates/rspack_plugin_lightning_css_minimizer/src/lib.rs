@@ -268,7 +268,7 @@ async fn process_assets(&self, compilation: &mut Compilation) -> Result<()> {
                 .with_kind(DiagnosticKind::Css)
                 .with_severity(RspackSeverity::Warn).into()).boxed())
               } else {
-              Diagnostic::from(MinifyError(MietteDiagnostic::new(format!("LightningCSS minification warning: {}",e.to_string())).with_severity(rspack_error::miette::Severity::Warning).into()).boxed()).with_file(Some(filename.as_str().into()))
+              Diagnostic::from(MinifyError(MietteDiagnostic::new(format!("LightningCSS minification warning: {e}")).with_severity(rspack_error::miette::Severity::Warning).into()).boxed()).with_file(Some(filename.as_str().into()))
               }
             }),
           );
