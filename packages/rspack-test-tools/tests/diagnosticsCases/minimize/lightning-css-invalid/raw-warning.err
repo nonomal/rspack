@@ -1,18 +1,18 @@
-[
-    {
-        "code": "ChunkMinificationWarning",
-        "file": "main.css"
-    },
-    {
-        "code": "ChunkMinificationWarning",
-        "file": "main.css"
-    },
-    {
-        "code": "ChunkMinificationWarning",
-        "file": "main.css"
-    },
-    {
-        "code": "ChunkMinificationWarning",
-        "file": "main.css"
-    }
+Array [
+  Object {
+    code: ChunkMinificationWarning,
+    file: main.css,
+  },
+  Object {
+    code: ChunkMinificationWarning,
+    file: main.css,
+  },
+  Object {
+    code: ChunkMinificationWarning,
+    file: main.css,
+  },
+  Object {
+    code: ChunkMinificationWarning,
+    file: main.css,
+  },
 ]

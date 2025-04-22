@@ -1,8 +1,8 @@
-[
-    {},
-    {
-        "chunkName": "b1",
-        "chunkEntry": true,
-        "chunkInitial": true
-    }
+Array [
+  Object {},
+  Object {
+    chunkEntry: true,
+    chunkInitial: true,
+    chunkName: b1,
+  },
 ]

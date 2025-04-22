@@ -60,18 +60,19 @@ export class DiagnosticProcessor<
 			delete e.stack;
 			return e;
 		});
-		let statsJsonErrors = normalizePlaceholder(
-			JSON.stringify(errors, null, 4)
-		).replaceAll("\\", "/");
-		let statsJsonWarnings = normalizePlaceholder(
-			JSON.stringify(warnings, null, 4)
-		).replaceAll("\\", "/");
 
 		if (typeof this._diagnosticOptions.format === "function") {
 			output = this._diagnosticOptions.format(output);
-			statsJsonErrors = this._diagnosticOptions.format(statsJsonErrors);
-			statsJsonWarnings = this._diagnosticOptions.format(statsJsonWarnings);
 		}
+
+		env.expect.addSnapshotSerializer({
+			test(received) {
+				return typeof received === "string";
+			},
+			serialize(received) {
+				return normalizePlaceholder((received as string).trim());
+			}
+		});
 
 		const errorOutputPath = path.resolve(
 			context.getSource(this._diagnosticOptions.snapshot)
@@ -83,8 +84,8 @@ export class DiagnosticProcessor<
 			context.getSource(this._diagnosticOptions.snapshotWarning)
 		);
 		env.expect(output).toMatchFileSnapshot(errorOutputPath);
-		env.expect(statsJsonErrors).toMatchFileSnapshot(errorStatsOutputPath);
-		env.expect(statsJsonWarnings).toMatchFileSnapshot(warningStatsOutputPath);
+		env.expect(errors).toMatchFileSnapshot(errorStatsOutputPath);
+		env.expect(warnings).toMatchFileSnapshot(warningStatsOutputPath);
 	}
 
 	static defaultOptions<T extends ECompilerType>(

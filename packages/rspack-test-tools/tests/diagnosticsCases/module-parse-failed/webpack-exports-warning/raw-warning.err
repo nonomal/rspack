@@ -1,7 +1,7 @@
-[
-    {
-        "code": "ModuleParseWarning",
-        "moduleIdentifier": "<TEST_TOOLS_ROOT>/tests/diagnosticsCases/module-parse-failed/webpack-exports-warning/index.js",
-        "moduleName": "./index.js"
-    }
+Array [
+  Object {
+    code: ModuleParseWarning,
+    moduleIdentifier: <TEST_TOOLS_ROOT>/tests/diagnosticsCases/module-parse-failed/webpack-exports-warning/index.js,
+    moduleName: ./index.js,
+  },
 ]

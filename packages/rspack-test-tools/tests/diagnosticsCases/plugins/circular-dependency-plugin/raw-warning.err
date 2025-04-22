@@ -1,8 +1,8 @@
-[
-    {
-        "code": "Circular Dependency"
-    },
-    {
-        "code": "Circular Dependency"
-    }
+Array [
+  Object {
+    code: Circular Dependency,
+  },
+  Object {
+    code: Circular Dependency,
+  },
 ]

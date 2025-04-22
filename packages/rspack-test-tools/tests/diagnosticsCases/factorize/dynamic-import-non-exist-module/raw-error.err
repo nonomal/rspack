@@ -1,6 +1,6 @@
-[
-    {
-        "moduleIdentifier": "<TEST_TOOLS_ROOT>/tests/diagnosticsCases/factorize/dynamic-import-non-exist-module/index.js",
-        "moduleName": "./index.js"
-    }
+Array [
+  Object {
+    moduleIdentifier: <TEST_TOOLS_ROOT>/tests/diagnosticsCases/factorize/dynamic-import-non-exist-module/index.js,
+    moduleName: ./index.js,
+  },
 ]

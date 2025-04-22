@@ -127,7 +127,7 @@ exports[`new code splitting stats output new code splitting stats output/legacy-
 exports[`new code splitting stats output new code splitting stats output/let-keyword-as-variable-name-error should print correct stats for: NewCodeSplittingStatsOutput 1`] = `
 ERROR in ./index.js
   × Module parse failed:
-  ╰─▶   × JavaScript parsing error: Unexpected token \`let\`. Expected let is reserved in const, let, class declaration
+  ╰─▶   × JavaScript parse error: Unexpected token \`let\`. Expected let is reserved in const, let, class declaration
          ╭────
        1 │ let let = let;
          ·     ───
@@ -206,7 +206,7 @@ runtime modules 647 bytes 3 modules
 exports[`new code splitting stats output new code splitting stats output/minify-error should print correct stats for: NewCodeSplittingStatsOutput 1`] = `
 ERROR in main.js
   × Chunk minification failed:
-  ╰─▶   × JavaScript parsing error: Expected a semicolon
+  ╰─▶   × JavaScript parse error: Expected a semicolon
          ╭─[1:8]
        1 │ const a {}
          ·         ─
@@ -216,7 +216,7 @@ ERROR in main.js
 
 ERROR in main.js
   × Chunk minification failed:
-  ╰─▶   × JavaScript parsing error: 'const' declarations must be initialized
+  ╰─▶   × JavaScript parse error: 'const' declarations must be initialized
          ╭─[1:6]
        1 │ const a {}
          ·       ─
@@ -291,7 +291,7 @@ chunk (runtime: runtime~e2) runtime~e2.js (runtime~e2) xx KiB [initial] [rendere
 exports[`new code splitting stats output new code splitting stats output/parse-error should print correct stats for: NewCodeSplittingStatsOutput 1`] = `
 ERROR in ./b.js
   × Module parse failed:
-  ╰─▶   × JavaScript parsing error: Expected ';', '}' or <eof>
+  ╰─▶   × JavaScript parse error: Expected ';', '}' or <eof>
          ╭─[6:7]
        4 │ includes
        5 │ a

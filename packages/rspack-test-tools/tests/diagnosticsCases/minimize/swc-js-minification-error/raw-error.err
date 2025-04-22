@@ -1,6 +1,6 @@
-[
-    {
-        "code": "ChunkMinificationError",
-        "file": "main.js"
-    }
+Array [
+  Object {
+    code: ChunkMinificationError,
+    file: main.js,
+  },
 ]
