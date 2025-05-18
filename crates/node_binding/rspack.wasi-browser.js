@@ -60,13 +60,16 @@ const {
     }
   },
 })
+export const Assets = __napiModule.exports.Assets
 export const AsyncDependenciesBlock = __napiModule.exports.AsyncDependenciesBlock
+export const BuildInfo = __napiModule.exports.BuildInfo
 export const Chunks = __napiModule.exports.Chunks
 export const CodeGenerationResult = __napiModule.exports.CodeGenerationResult
 export const CodeGenerationResults = __napiModule.exports.CodeGenerationResults
 export const ConcatenatedModule = __napiModule.exports.ConcatenatedModule
 export const ContextModule = __napiModule.exports.ContextModule
 export const Dependency = __napiModule.exports.Dependency
+export const Diagnostics = __napiModule.exports.Diagnostics
 export const EntryDataDto = __napiModule.exports.EntryDataDto
 export const EntryDataDTO = __napiModule.exports.EntryDataDTO
 export const EntryDependency = __napiModule.exports.EntryDependency

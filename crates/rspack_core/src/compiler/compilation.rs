@@ -822,6 +822,14 @@ impl Compilation {
     self.diagnostics.extend(diagnostics);
   }
 
+  pub fn diagnostics(&self) -> &[Diagnostic] {
+    &self.diagnostics
+  }
+
+  pub fn diagnostics_mut(&mut self) -> &mut Vec<Diagnostic> {
+    &mut self.diagnostics
+  }
+
   pub fn get_errors(&self) -> impl Iterator<Item = &Diagnostic> {
     self
       .diagnostics
@@ -1103,7 +1111,7 @@ impl Compilation {
         continue;
       }
 
-      for (name, asset) in assets {
+      for (name, asset) in assets.as_ref() {
         module_assets.push((name.clone(), asset.clone()));
       }
       // assets of executed modules are not in this compilation
