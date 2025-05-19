@@ -91,7 +91,7 @@ impl ModuleTracker {
         }
         ModuleIssuer::Some(mid) => {
           if let Some(count) = self.unfinished_module.get_mut(mid) {
-            *count = *count - 1;
+            *count -= 1;
             if count == &0 {
               queue.push_back(*mid);
             }
@@ -124,7 +124,7 @@ impl ModuleTracker {
       .unfinished_module
       .get_mut(&origin_mid)
       .expect("should factorize parent module unfinished");
-    *count = *count - 1;
+    *count -= 1;
     if count == &0 {
       self.finish_module(context, origin_mid)
     } else {
@@ -196,7 +196,7 @@ impl ModuleTracker {
     };
     let mg = context.artifact.get_module_graph();
     if let Some(mid) = mg.module_identifier_by_dependency_id(&dep_id) {
-      if self.unfinished_module.contains_key(&mid) {
+      if self.unfinished_module.contains_key(mid) {
         // The target module is unfinished, add reuse and pending.
         self.reused_unfinished_module.insert(*mid);
         self.pending_tasks.push(task);

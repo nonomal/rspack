@@ -89,9 +89,9 @@ impl Task<ExecutorTaskContext> for EntryTask {
             .then(Box::<ModuleProfile>::default),
           resolver_factory: origin_context.resolver_factory.clone(),
         })]));
-        v.insert(dep_id).clone()
+        *v.insert(dep_id)
       }
-      Entry::Occupied(v) => v.get().clone(),
+      Entry::Occupied(v) => *v.get(),
     };
 
     executed_entry_deps.insert(dep_id);

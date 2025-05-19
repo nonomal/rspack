@@ -113,7 +113,7 @@ impl ModuleExecutor {
       .collect::<HashSet<_>>();
     self.entries.retain(|k, v| {
       if let Some(mid) = &k.origin_module_identifier {
-        !removed_module.contains(mid) || ctx.executed_entry_deps.contains(&v)
+        !removed_module.contains(mid) || ctx.executed_entry_deps.contains(v)
       } else {
         true
       }

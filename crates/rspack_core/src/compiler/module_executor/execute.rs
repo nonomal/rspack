@@ -105,9 +105,8 @@ impl Task<ExecutorTaskContext> for ExecuteTask {
     let entry_dep_id = entries.get(&meta).expect("should have dep_id");
     // collect module info
     let mg = origin_context.artifact.get_module_graph();
-    let Some(entry_module_identifier) = mg
-      .module_identifier_by_dependency_id(&entry_dep_id)
-      .copied()
+    let Some(entry_module_identifier) =
+      mg.module_identifier_by_dependency_id(entry_dep_id).copied()
     else {
       // no entry module, entry dependency factorize failed.
       result_sender
