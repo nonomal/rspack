@@ -1,4 +1,4 @@
-use rustc_hash::FxHashMap as HashMap;
+use rustc_hash::{FxHashMap as HashMap, FxHashSet as HashSet};
 
 use super::module_tracker::ModuleTracker;
 use crate::{make::repair::MakeTaskContext, DependencyId, ModuleIdentifier};
@@ -11,8 +11,10 @@ pub struct ImportModuleMeta {
   pub layer: Option<String>,
 }
 
+#[derive(Debug)]
 pub struct ExecutorTaskContext {
   pub origin_context: MakeTaskContext,
   pub tracker: ModuleTracker,
   pub entries: HashMap<ImportModuleMeta, DependencyId>,
+  pub executed_entry_deps: HashSet<DependencyId>,
 }

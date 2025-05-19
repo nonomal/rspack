@@ -105,10 +105,22 @@ impl Task<ExecutorTaskContext> for ExecuteTask {
     let entry_dep_id = entries.get(&meta).expect("should have dep_id");
     // collect module info
     let mg = origin_context.artifact.get_module_graph();
-    let entry_module_identifier = mg
-      .get_module_by_dependency_id(&entry_dep_id)
-      .expect("should have module")
-      .identifier();
+    let Some(entry_module_identifier) = mg
+      .module_identifier_by_dependency_id(&entry_dep_id)
+      .copied()
+    else {
+      // no entry module, entry dependency factorize failed.
+      result_sender
+        .send((
+          execute_result,
+          CompilationAssets::default(),
+          IdentifierSet::default(),
+          vec![],
+        ))
+        .expect("should send result success");
+
+      return Ok(vec![]);
+    };
     let make_failed_module = &origin_context.artifact.make_failed_module;
     let make_failed_dependencies = &origin_context.artifact.make_failed_dependencies;
     let mut queue = VecDeque::from(vec![entry_module_identifier]);

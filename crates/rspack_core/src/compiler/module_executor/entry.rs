@@ -40,6 +40,7 @@ impl Task<ExecutorTaskContext> for EntryTask {
       entries,
       origin_context,
       tracker,
+      executed_entry_deps,
     } = context;
 
     let task = ExecuteTask {
@@ -92,6 +93,8 @@ impl Task<ExecutorTaskContext> for EntryTask {
       }
       Entry::Occupied(v) => v.get().clone(),
     };
+
+    executed_entry_deps.insert(dep_id);
 
     res.extend(
       tracker.on_entry(origin_context, dep_id, |error| match error {

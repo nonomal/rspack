@@ -39,7 +39,7 @@ pub struct ModuleExecutor {
 
   // temporary data, used by hook_after_finish_modules
   event_sender: Option<UnboundedSender<Event>>,
-  stop_receiver: Option<oneshot::Receiver<(MakeArtifact, HashMap<ImportModuleMeta, DependencyId>)>>,
+  stop_receiver: Option<oneshot::Receiver<ExecutorTaskContext>>,
   module_assets: IdentifierDashMap<HashMap<String, CompilationAsset>>,
   code_generated_modules: IdentifierDashSet,
   pub executed_runtime_modules: IdentifierDashMap<ExecutedRuntimeModule>,
@@ -71,6 +71,7 @@ impl ModuleExecutor {
       origin_context: MakeTaskContext::new(compilation, make_artifact, Arc::new(MemoryCache)),
       tracker: Default::default(),
       entries: std::mem::take(&mut self.entries),
+      executed_entry_deps: Default::default(),
     };
     let (event_sender, event_receiver) = unbounded_channel();
     let (stop_sender, stop_receiver) = oneshot::channel();
@@ -82,8 +83,8 @@ impl ModuleExecutor {
       let _ = run_task_loop(&mut ctx, vec![Box::new(CtrlTask { event_receiver })]).await;
 
       stop_sender
-        .send((ctx.origin_context.artifact, ctx.entries))
-        .expect("should success");
+        .send(ctx)
+        .expect("the self.stop_receiver has been droped");
     }));
 
     Ok(())
@@ -97,28 +98,22 @@ impl ModuleExecutor {
       .expect("should success");
 
     let stop_receiver = std::mem::take(&mut self.stop_receiver);
-    if let Ok((make_artifact, entries)) = stop_receiver.expect("should have receiver").await {
-      self.make_artifact = make_artifact;
-      self.entries = entries;
-    } else {
+    let Ok(ctx) = stop_receiver.expect("should have receiver").await else {
       panic!("receive make artifact failed");
-    }
+    };
+    self.make_artifact = ctx.origin_context.artifact;
+    self.entries = ctx.entries;
 
     // clean removed entries
-    let mut removed_module = HashSet::default();
-    for mid in &compilation.make_artifact.revoked_modules {
-      if !compilation.make_artifact.built_modules.contains(mid) {
-        removed_module.insert(mid);
-      }
-    }
-    for mid in &self.make_artifact.revoked_modules {
-      if !self.make_artifact.built_modules.contains(mid) {
-        removed_module.insert(mid);
-      }
-    }
-    self.entries.retain(|k, _| {
+    let removed_module = compilation
+      .make_artifact
+      .revoked_modules
+      .iter()
+      .chain(self.make_artifact.revoked_modules.iter())
+      .collect::<HashSet<_>>();
+    self.entries.retain(|k, v| {
       if let Some(mid) = &k.origin_module_identifier {
-        !removed_module.contains(mid)
+        !removed_module.contains(mid) || ctx.executed_entry_deps.contains(&v)
       } else {
         true
       }

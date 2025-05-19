@@ -21,6 +21,7 @@ use crate::{
   SharedPluginDriver,
 };
 
+#[derive(Debug)]
 pub struct MakeTaskContext {
   pub compiler_id: CompilerId,
   // compilation info
