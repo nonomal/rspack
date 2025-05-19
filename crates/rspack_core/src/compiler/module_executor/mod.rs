@@ -82,9 +82,7 @@ impl ModuleExecutor {
     tokio::spawn(task::unconstrained(async move {
       let _ = run_task_loop(&mut ctx, vec![Box::new(CtrlTask { event_receiver })]).await;
 
-      stop_sender
-        .send(ctx)
-        .expect("the self.stop_receiver has been droped");
+      let _ = stop_sender.send(ctx);
     }));
 
     Ok(())

@@ -21,11 +21,9 @@ impl Task<ExecutorTaskContext> for CtrlTask {
   }
 
   async fn background_run(mut self: Box<Self>) -> TaskResult<ExecutorTaskContext> {
-    let event = self
-      .event_receiver
-      .recv()
-      .await
-      .expect("should recv message");
+    let Some(event) = self.event_receiver.recv().await else {
+      return Ok(vec![]);
+    };
     tracing::debug!("CtrlTask async receive {:?}", event);
     match event {
       Event::ImportModule(entry_task) => return Ok(vec![Box::new(entry_task), self]),
