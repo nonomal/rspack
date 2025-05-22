@@ -5,19 +5,19 @@ use std::{
   sync::{Arc, LazyLock},
 };
 
-use rayon::iter::{IntoParallelIterator, IntoParallelRefIterator, ParallelIterator};
+use rayon::iter::{IntoParallelIterator, IntoParallelRefIterator};
 use regex::Regex;
 use rspack_collections::{
   IdentifierIndexMap, IdentifierIndexSet, IdentifierMap, IdentifierSet, UkeyIndexMap, UkeyMap,
 };
 use rspack_core::{
-  AssetInfo, BoxModule, ChunkLink, ChunkUkey, Compilation,
-  CompilationAdditionalChunkRuntimeRequirements, CompilationAfterCodeGeneration,
-  CompilationAfterSeal, CompilationConcatenationScope, CompilationFinishModules, CompilationParams,
-  CompilationProcessAssets, CompilerCompilation, ConcatenatedModuleIdent, ConcatenatedModuleInfo,
-  ConcatenationScope, DependencyId, ExportInfo, ExportInfoProvided, ExternalModuleInfo,
-  IdentCollector, Module, ModuleGraph, ModuleGraphConnection, ModuleIdentifier, ModuleInfo, Plugin,
-  RuntimeCondition, RuntimeGlobals, SourceType,
+  AssetInfo, BoxModule, ChunkUkey, Compilation, CompilationAdditionalChunkRuntimeRequirements,
+  CompilationAfterCodeGeneration, CompilationAfterSeal, CompilationConcatenationScope,
+  CompilationFinishModules, CompilationParams, CompilationProcessAssets, CompilerCompilation,
+  ConcatenatedModuleIdent, ConcatenatedModuleInfo, ConcatenationScope, DependencyId, ExportInfo,
+  ExportInfoProvided, ExternalModuleInfo, IdentCollector, Module, ModuleGraph,
+  ModuleGraphConnection, ModuleIdentifier, ModuleInfo, Plugin, RuntimeCondition, RuntimeGlobals,
+  SourceType,
   reserved_names::RESERVED_NAMES,
   rspack_sources::{ConcatSource, RawSource, ReplaceSource, Source},
 };
@@ -167,33 +167,6 @@ async fn finish_modules(&self, compilation: &mut Compilation) -> Result<()> {
   Ok(())
 }
 
-impl EsmLibraryPlugin {
-  fn get_imports(
-    m: &Box<dyn Module>,
-    module_graph: &ModuleGraph,
-  ) -> impl Iterator<Item = (ModuleIdentifier, Vec<DependencyId>)> {
-    let mut modules = IdentifierIndexMap::default();
-    for dep in m.get_dependencies() {
-      let Some(conn) = module_graph.connection_by_dependency_id(dep) else {
-        continue;
-      };
-
-      if !conn.is_target_active(module_graph, None) {
-        continue;
-      }
-
-      let Some(dep_module) = module_graph.module_identifier_by_dependency_id(dep) else {
-        continue;
-      };
-
-      let connections: &mut Vec<DependencyId> = modules.entry(*dep_module).or_default();
-      connections.push(conn.dependency_id);
-    }
-
-    modules.into_iter()
-  }
-}
-
 #[plugin_hook(CompilationConcatenationScope for EsmLibraryPlugin)]
 async fn concatenation_scope(
   &self,
@@ -220,7 +193,6 @@ async fn concatenation_scope(
 
 #[plugin_hook(CompilationAfterCodeGeneration for EsmLibraryPlugin)]
 async fn after_code_generation(&self, compilation: &mut Compilation) -> Result<()> {
-  self.calculate_chunk_relation(compilation).await?;
   self.link(compilation).await
 }
 
@@ -244,8 +216,15 @@ async fn additional_chunk_runtime_requirements(
     .get_chunk_modules_identifier(chunk_ukey)
     .len();
 
+  let modules = compilation
+    .chunk_graph
+    .get_chunk_modules_identifier(chunk_ukey)
+    .iter()
+    .collect::<Vec<_>>();
+
+  // chunk that has modules which cannot be scope hoisted should have correct runtime
   if chunk_modules_len > chunk_link.hoisted_modules.len() {
-    runtime_requirements.insert(RuntimeGlobals::DEFINE_PROPERTY_GETTERS);
+    dbg!(chunk_modules_len, chunk_link.hoisted_modules.len(), modules);
     runtime_requirements.insert(RuntimeGlobals::MODULE_FACTORIES);
     runtime_requirements.insert(RuntimeGlobals::REQUIRE);
   }
