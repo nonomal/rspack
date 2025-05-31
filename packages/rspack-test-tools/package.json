@@ -34,7 +34,7 @@
     "access": "public",
     "provenance": true
   },
-  "homepage": "https://rspack.dev",
+  "homepage": "https://rspack.rs",
   "bugs": "https://github.com/web-infra-dev/rspack/issues",
   "repository": {
     "type": "git",
@@ -58,6 +58,7 @@
     "jest-snapshot": "29.7.0",
     "jsdom": "^26.1.0",
     "memfs": "4.17.2",
+    "loader-utils": "^2.0.4",
     "path-serializer": "0.4.0",
     "pretty-format": "29.7.0",
     "rimraf": "^5.0.10",
@@ -104,7 +105,7 @@
     "source-map": "^0.7.4",
     "source-map-loader": "^5.0.0",
     "style-loader": "^4.0.0",
-    "terser": "5.39.2",
+    "terser": "5.40.0",
     "typescript": "^5.8.3",
     "wast-loader": "^1.14.1",
     "worker-rspack-loader": "^3.1.2"
