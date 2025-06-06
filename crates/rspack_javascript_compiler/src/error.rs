@@ -22,12 +22,6 @@ pub struct ErrorSpan {
   pub end: u32,
 }
 
-impl ErrorSpan {
-  pub fn new(start: u32, end: u32) -> Self {
-    Self { start, end }
-  }
-}
-
 impl From<Span> for ErrorSpan {
   fn from(span: Span) -> Self {
     Self {
@@ -85,7 +79,7 @@ pub fn ecma_parse_error_deduped_to_rspack_error(
     fm,
     span.start as usize,
     span.end as usize,
-    "JavaScript parsing error".into(),
+    "JavaScript parse error".into(),
     message,
   )
   .with_kind(DiagnosticKind::JavaScript)

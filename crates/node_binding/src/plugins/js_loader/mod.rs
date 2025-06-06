@@ -17,12 +17,20 @@ use rspack_core::{
 };
 use rspack_error::Result;
 use rspack_hook::{plugin, plugin_hook};
+use rustc_hash::FxHashSet;
 use tokio::sync::RwLock;
 
 use crate::{RspackResultToNapiResultExt, COMPILER_REFERENCES};
 
-pub type JsLoaderRunner =
-  ThreadsafeFunction<JsLoaderContext, Promise<JsLoaderContext>, JsLoaderContext, false, true, 0>;
+pub type JsLoaderRunner = ThreadsafeFunction<
+  JsLoaderContext,
+  Promise<JsLoaderContext>,
+  JsLoaderContext,
+  Status,
+  false,
+  true,
+  0,
+>;
 
 struct JsLoaderRunnerGetterData {
   compiler_id: CompilerId,
@@ -139,11 +147,17 @@ pub(crate) struct JsLoaderRspackPlugin {
   compiler_id: OnceCell<CompilerId>,
   pub(crate) runner_getter: JsLoaderRunnerGetter,
   pub(crate) runner: RwLock<Option<JsLoaderRunner>>,
+  pub(crate) loaders_without_pitch: RwLock<FxHashSet<String>>,
 }
 
 impl JsLoaderRspackPlugin {
   pub fn new(runner_getter: JsLoaderRunnerGetter) -> Self {
-    Self::new_inner(Default::default(), runner_getter, RwLock::new(None))
+    Self::new_inner(
+      Default::default(),
+      runner_getter,
+      RwLock::new(None),
+      RwLock::new(FxHashSet::default()),
+    )
   }
 }
 

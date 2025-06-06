@@ -23,6 +23,7 @@ mod allocator;
 mod asset;
 mod asset_condition;
 mod async_dependency_block;
+mod browserslist;
 mod build_info;
 mod chunk;
 mod chunk_graph;
@@ -32,6 +33,7 @@ mod codegen_result;
 mod compilation;
 mod compiler;
 mod context_module_factory;
+mod define_symbols;
 mod dependencies;
 mod dependency;
 mod diagnostic;
@@ -65,6 +67,7 @@ mod utils;
 pub use asset::*;
 pub use asset_condition::*;
 pub use async_dependency_block::*;
+pub use browserslist::*;
 pub use build_info::*;
 pub use chunk::*;
 pub use chunk_graph::*;
@@ -413,7 +416,7 @@ fn init() {
     .thread_name_fn(|| {
       static ATOMIC_ID: AtomicUsize = AtomicUsize::new(0);
       let id = ATOMIC_ID.fetch_add(1, Ordering::SeqCst);
-      format!("tokio-{}", id)
+      format!("tokio-{id}")
     })
     .enable_all()
     .build()
@@ -494,7 +497,8 @@ fn node_init(mut _exports: Object, env: Env) -> Result<()> {
 #[napi(module_exports)]
 pub fn rspack_module_exports(exports: Object, env: Env) -> Result<()> {
   node_init(exports, env)?;
-  module::init(exports, env)?;
+  module::export_symbols(exports, env)?;
+  build_info::export_symbols(exports, env)?;
   Ok(())
 }
 
