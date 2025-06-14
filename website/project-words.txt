@@ -21,6 +21,7 @@ builtinspresetenv
 builtinswc
 bundleless
 Bundleless
+browserslistrc
 bvanjoi
 chakra
 chapple
@@ -135,6 +136,7 @@ outputlibraryamdcontainer
 outputlibraryumdnameddefine
 outputwasmloading
 perfetto
+pftrace
 Peschke
 pmmmwh
 proxied

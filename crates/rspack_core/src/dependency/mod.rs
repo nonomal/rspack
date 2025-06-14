@@ -37,15 +37,15 @@ pub use runtime_requirements_dependency::{
   RuntimeRequirementsDependency, RuntimeRequirementsDependencyTemplate,
 };
 pub use runtime_template::*;
-use rustc_hash::FxHashMap;
+use rustc_hash::{FxHashMap, FxHashSet};
 use serde::Serialize;
 pub use span::SpanExt;
 pub use static_exports_dependency::{StaticExportsDependency, StaticExportsSpec};
 use swc_core::ecma::atoms::Atom;
 
 use crate::{
-  ConnectionState, ModuleGraph, ModuleGraphConnection, ModuleIdentifier, ReferencedExport,
-  RuntimeSpec,
+  ConnectionState, EvaluatedInlinableValue, ModuleGraph, ModuleGraphCacheArtifact,
+  ModuleGraphConnection, ModuleIdentifier, RuntimeSpec,
 };
 
 #[derive(Debug, Default)]
@@ -59,6 +59,7 @@ pub struct ExportSpec {
   pub hidden: Option<bool>,
   pub from: Option<ModuleGraphConnection>,
   pub from_export: Option<ModuleGraphConnection>,
+  pub inlinable: Option<EvaluatedInlinableValue>,
 }
 
 #[derive(Debug)]
@@ -90,10 +91,10 @@ impl Default for ExportNameOrSpec {
 
 #[derive(Debug, Default)]
 pub enum ExportsOfExportsSpec {
-  True,
+  UnknownExports,
   #[default]
-  Null,
-  Array(Vec<ExportNameOrSpec>),
+  NoExports,
+  Names(Vec<ExportNameOrSpec>),
 }
 
 #[derive(Debug, Default)]
@@ -105,39 +106,8 @@ pub struct ExportsSpec {
   pub terminal_binding: Option<bool>,
   pub from: Option<ModuleGraphConnection>,
   pub dependencies: Option<Vec<ModuleIdentifier>>,
-  pub hide_export: Option<Vec<Atom>>,
-  pub exclude_exports: Option<Vec<Atom>>,
-}
-
-pub enum ExportsReferencedType {
-  No,     // NO_EXPORTS_REFERENCED
-  Object, // EXPORTS_OBJECT_REFERENCED
-  String(Box<Vec<Vec<Atom>>>),
-  Value(Box<Vec<ReferencedExport>>),
-}
-
-impl From<Atom> for ExportsReferencedType {
-  fn from(value: Atom) -> Self {
-    ExportsReferencedType::String(Box::new(vec![vec![value]]))
-  }
-}
-
-impl From<Vec<Vec<Atom>>> for ExportsReferencedType {
-  fn from(value: Vec<Vec<Atom>>) -> Self {
-    ExportsReferencedType::String(Box::new(value))
-  }
-}
-
-impl From<Vec<Atom>> for ExportsReferencedType {
-  fn from(value: Vec<Atom>) -> Self {
-    ExportsReferencedType::String(Box::new(vec![value]))
-  }
-}
-
-impl From<Vec<ReferencedExport>> for ExportsReferencedType {
-  fn from(value: Vec<ReferencedExport>) -> Self {
-    ExportsReferencedType::Value(Box::new(value))
-  }
+  pub hide_export: Option<FxHashSet<Atom>>,
+  pub exclude_exports: Option<FxHashSet<Atom>>,
 }
 
 pub trait DependencyConditionFn: Sync + Send {
@@ -146,21 +116,72 @@ pub trait DependencyConditionFn: Sync + Send {
     conn: &ModuleGraphConnection,
     runtime: Option<&RuntimeSpec>,
     module_graph: &ModuleGraph,
+    module_graph_cache: &ModuleGraphCacheArtifact,
   ) -> ConnectionState;
+
+  fn handle_composed(&self, primary: ConnectionState, rest: ConnectionState) -> ConnectionState {
+    // merge by default
+    primary + rest
+  }
 }
 
 #[derive(Clone)]
 pub enum DependencyCondition {
   False,
   Fn(Arc<dyn DependencyConditionFn>),
+  Composed(Box<(Arc<dyn DependencyConditionFn>, DependencyCondition)>),
+}
+
+impl DependencyCondition {
+  pub fn new_false() -> Self {
+    Self::False
+  }
+
+  pub fn new_fn(f: impl DependencyConditionFn + 'static) -> Self {
+    Self::Fn(Arc::new(f))
+  }
+
+  pub fn new_composed(
+    primary: impl DependencyConditionFn + 'static,
+    rest: DependencyCondition,
+  ) -> Self {
+    Self::Composed(Box::new((Arc::new(primary), rest)))
+  }
+
+  pub fn is_false(&self) -> bool {
+    matches!(self, Self::False)
+  }
+
+  pub fn is_fn(&self) -> bool {
+    matches!(self, Self::Fn(_))
+  }
+
+  pub fn get_connection_state(
+    &self,
+    connection: &ModuleGraphConnection,
+    runtime: Option<&RuntimeSpec>,
+    mg: &ModuleGraph,
+    module_graph_cache: &ModuleGraphCacheArtifact,
+  ) -> ConnectionState {
+    match self {
+      Self::False => ConnectionState::Active(false),
+      Self::Fn(f) => f.get_connection_state(connection, runtime, mg, module_graph_cache),
+      Self::Composed(box (primary, rest)) => {
+        let primary_state =
+          primary.get_connection_state(connection, runtime, mg, module_graph_cache);
+        let rest_state = rest.get_connection_state(connection, runtime, mg, module_graph_cache);
+        primary.handle_composed(primary_state, rest_state)
+      }
+    }
+  }
 }
 
 impl std::fmt::Debug for DependencyCondition {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     match self {
-      // Self::Nil => write!(f, "Nil"),
       Self::False => write!(f, "False"),
       Self::Fn(_) => write!(f, "Fn"),
+      Self::Composed(_) => write!(f, "Composed"),
     }
   }
 }

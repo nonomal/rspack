@@ -3,7 +3,7 @@ use rspack_cacheable::{cacheable, cacheable_dyn, with::AsPreset};
 use rspack_core::{
   AsContextDependency, AsModuleDependency, Compilation, Dependency, DependencyCodeGeneration,
   DependencyId, ExportNameOrSpec, ExportSpec, ExportsOfExportsSpec, ExportsSpec, ModuleGraph,
-  RuntimeSpec,
+  ModuleGraphCacheArtifact, RuntimeSpec,
 };
 use rspack_util::{ext::DynHash, itoa};
 
@@ -32,10 +32,14 @@ impl Dependency for JsonExportsDependency {
     &self.id
   }
 
-  fn get_exports(&self, _mg: &ModuleGraph) -> Option<ExportsSpec> {
+  fn get_exports(
+    &self,
+    _mg: &ModuleGraph,
+    _mg_cache: &ModuleGraphCacheArtifact,
+  ) -> Option<ExportsSpec> {
     Some(ExportsSpec {
       exports: get_exports_from_data(&self.data, self.exports_depth, 1)
-        .unwrap_or(ExportsOfExportsSpec::Null),
+        .unwrap_or(ExportsOfExportsSpec::NoExports),
       ..Default::default()
     })
   }
@@ -76,7 +80,7 @@ fn get_exports_from_data(
     | JsonValue::Boolean(_) => {
       return None;
     }
-    JsonValue::Object(obj) => ExportsOfExportsSpec::Array(
+    JsonValue::Object(obj) => ExportsOfExportsSpec::Names(
       obj
         .iter()
         .map(|(k, v)| {
@@ -85,9 +89,9 @@ fn get_exports_from_data(
             can_mangle: Some(true),
             exports: get_exports_from_data(v, exports_depth, cur_depth + 1).map(
               |item| match item {
-                ExportsOfExportsSpec::True => unreachable!(),
-                ExportsOfExportsSpec::Null => unreachable!(),
-                ExportsOfExportsSpec::Array(arr) => arr,
+                ExportsOfExportsSpec::UnknownExports => unreachable!(),
+                ExportsOfExportsSpec::NoExports => unreachable!(),
+                ExportsOfExportsSpec::Names(arr) => arr,
               },
             ),
             ..Default::default()
@@ -99,7 +103,7 @@ fn get_exports_from_data(
       if arr.len() > 100 {
         return None;
       }
-      ExportsOfExportsSpec::Array(
+      ExportsOfExportsSpec::Names(
         arr
           .iter()
           .enumerate()
@@ -109,8 +113,10 @@ fn get_exports_from_data(
               can_mangle: Some(true),
               exports: get_exports_from_data(item, exports_depth, cur_depth + 1).map(|item| {
                 match item {
-                  ExportsOfExportsSpec::True | ExportsOfExportsSpec::Null => unreachable!(),
-                  ExportsOfExportsSpec::Array(arr) => arr,
+                  ExportsOfExportsSpec::UnknownExports | ExportsOfExportsSpec::NoExports => {
+                    unreachable!()
+                  }
+                  ExportsOfExportsSpec::Names(arr) => arr,
                 }
               }),
               ..Default::default()
