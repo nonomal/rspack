@@ -35,9 +35,13 @@ impl Dependency for CssExportDependency {
     &DependencyType::CssExport
   }
 
-  fn get_exports(&self, _mg: &rspack_core::ModuleGraph) -> Option<ExportsSpec> {
+  fn get_exports(
+    &self,
+    _mg: &rspack_core::ModuleGraph,
+    _mg_cache: &rspack_core::ModuleGraphCacheArtifact,
+  ) -> Option<ExportsSpec> {
     Some(ExportsSpec {
-      exports: ExportsOfExportsSpec::Array(
+      exports: ExportsOfExportsSpec::Names(
         self
           .convention_names
           .iter()

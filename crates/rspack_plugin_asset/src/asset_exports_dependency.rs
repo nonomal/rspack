@@ -1,7 +1,7 @@
 use rspack_cacheable::{cacheable, cacheable_dyn};
 use rspack_core::{
   AsContextDependency, AsDependencyCodeGeneration, AsModuleDependency, Dependency, DependencyId,
-  ExportNameOrSpec, ExportsOfExportsSpec, ExportsSpec, ModuleGraph,
+  ExportNameOrSpec, ExportsOfExportsSpec, ExportsSpec, ModuleGraph, ModuleGraphCacheArtifact,
 };
 
 #[cacheable]
@@ -24,9 +24,13 @@ impl Dependency for AssetExportsDependency {
     &self.id
   }
 
-  fn get_exports(&self, _mg: &ModuleGraph) -> Option<ExportsSpec> {
+  fn get_exports(
+    &self,
+    _mg: &ModuleGraph,
+    _mg_cache: &ModuleGraphCacheArtifact,
+  ) -> Option<ExportsSpec> {
     Some(ExportsSpec {
-      exports: ExportsOfExportsSpec::Array(vec![ExportNameOrSpec::String("default".into())]),
+      exports: ExportsOfExportsSpec::Names(vec![ExportNameOrSpec::String("default".into())]),
       priority: Some(1),
       terminal_binding: Some(true),
       ..Default::default()

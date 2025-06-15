@@ -19,7 +19,7 @@ use jsonc_parser::parse_to_serde_value;
 use rspack_error::{miette::MietteDiagnostic, AnyhowResultToRspackResultExt, Error};
 use rspack_util::{itoa, source_map::SourceMapKind, swc::minify_file_comments};
 use serde_json::error::Category;
-use swc_config::{merge::Merge, IsModule};
+use swc_config::{is_module::IsModule, merge::Merge};
 pub use swc_core::base::config::Options as SwcOptions;
 use swc_core::{
   base::{
@@ -36,7 +36,10 @@ use swc_core::{
   },
   ecma::{
     ast::{EsVersion, Pass, Program},
-    parser::{parse_file_as_module, parse_file_as_program, parse_file_as_script, Syntax},
+    parser::{
+      parse_file_as_commonjs, parse_file_as_module, parse_file_as_program, parse_file_as_script,
+      Syntax,
+    },
     transforms::base::helpers::{self, Helpers},
   },
 };
@@ -356,6 +359,9 @@ impl<'a> JavaScriptTransformer<'a> {
         parse_file_as_script(&fm, syntax, target, comments, &mut errors).map(Program::Script)
       }
       IsModule::Unknown => parse_file_as_program(&fm, syntax, target, comments, &mut errors),
+      IsModule::CommonJS => {
+        parse_file_as_commonjs(&fm, syntax, target, comments, &mut errors).map(Program::Script)
+      }
     };
 
     for e in errors {
@@ -404,6 +410,7 @@ impl<'a> JavaScriptTransformer<'a> {
           self.options.output_path.as_deref(),
           self.options.source_root.clone(),
           self.options.source_file_name.clone(),
+          self.config.source_map_ignore_list.clone(),
           handler,
           Some(self.config.clone()),
           Some(&self.comments),
@@ -461,7 +468,7 @@ impl<'a> JavaScriptTransformer<'a> {
               The version of the SWC Wasm plugin you're using might not be compatible with `builtin:swc-loader`.
               The `swc_core` version of the current `rspack_core` is {swc_core_version}. 
               Please check the `swc_core` version of SWC Wasm plugin to make sure these versions are within the compatible range.
-              See this guide as a reference for selecting SWC Wasm plugin versions: https://rspack.dev/errors/swc-plugin-version"};
+              See this guide as a reference for selecting SWC Wasm plugin versions: https://rspack.rs/errors/swc-plugin-version"};
             MietteDiagnostic::new(format!("{error_msg}{help_msg}")).with_code(SWC_MIETTE_DIAGNOSTIC_CODE)
           } else {
             let error_msg = err.to_pretty_string();
@@ -476,6 +483,7 @@ impl<'a> JavaScriptTransformer<'a> {
         BoolOr::Bool(true) | BoolOr::Data(JsMinifyCommentOption::PreserveAllComments) => true,
         BoolOr::Data(JsMinifyCommentOption::PreserveSomeComments) => false,
         BoolOr::Bool(false) => false,
+        BoolOr::Data(JsMinifyCommentOption::PreserveRegexComments { .. }) => false,
       };
 
       minify_file_comments(
